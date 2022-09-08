@@ -2,9 +2,12 @@
 
 ## In Progress
 - [ ] Driver
-  - [ ] To be determined
+  - [ ] Name
+  - [ ] Order#
 - [ ] Address
-  - [ ] To be determined
+  - [ ] Name
+  - [ ] Order#
+  - [ ] Coordinate 
 - [ ] Grid
   - [ ] To be determined
 - [ ] Tips/points
