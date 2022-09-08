@@ -14,3 +14,4 @@
   - [ ] To be determined
 - [ ] Strikes
   - [ ] To be determined
+- [ ] Clock
