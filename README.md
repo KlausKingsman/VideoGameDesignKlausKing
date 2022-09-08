@@ -2,12 +2,12 @@
 
 ## In Progress
 - [ ] Driver
-- [ ] To be determined
+  - [ ] To be determined
 - [ ] Address
-- [ ] To be determined
+  - [ ] To be determined
 - [ ] Grid
-- [ ] To be determined
+  - [ ] To be determined
 - [ ] Tips/points
-- [ ] To be determined
+  - [ ] To be determined
 - [ ] Strikes
-- [ ] To be determined
+  - [ ] To be determined
