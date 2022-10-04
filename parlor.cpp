@@ -13,6 +13,8 @@ using namespace std;
 // sorting is a bit messy if a driver "cuts" another driver
 // issue with tips displaying cents correctly; might just do whole dollars anyway
 
+// yo make a passthrough flag!!
+
 
 int hr = 11; // hr counter for clock
 int m = 0; // minute counter for clock
@@ -49,6 +51,8 @@ struct driverData driver[4] = // the values for drivers; null is 0
 	{0, 0, 0, "Charlie, C.    ", 0, 0, 0, 0}
 };
 
+int totalNumDrivers = (sizeof(driver) / sizeof(*driver))-1; // variable assigned the size of the array minus null
+
 struct driverData driverTemp[1] = // a temp driver struct for sorting purposes
 {0, 0, 0, "null           ", 0, 0, 0, 0};
 
@@ -60,14 +64,15 @@ struct Store // flag structure if a driver and/or order is ready
 
 Store parlor = {0, 0}; // initial set values for store flags
 
-struct orderData // variable structure tied to orders
+struct orderData // variable structure tied to orders *******************ADDED A BOOL orderDelivered ***********changed int orderTime name
 {
 	int orderNum; // the order number; null is 0; starts at 1;
 	int timeHour; // hour the order is started; paired with timeMinute
 	int timeMinute; // minute the order is started; paired with timeHour
-	int inStoreTime; // how long the order has been in store
+	int orderTime; // how long the order has existed
 	bool orderInstore; // is this particular order in store?
 	bool orderUp; // is this particular order ready?
+	bool orderDelivered; // is this particular order delivered?
 	string address; // address of order
 	string gridMap; // where its located on gridmap; soon to be made
 	double gridA; // number representing location on grid x axis
@@ -77,16 +82,16 @@ struct orderData // variable structure tied to orders
 
 struct orderData order[10] = // the values of the orders
 {
-    {0, 11,  5, 0, 0, 0, "null     ", "00 ", 0, 0, 0.00},
-    {1, 11,  7, 0, 0, 0, "422 Cliff St.    ", "G1 ", 7, 1, 8.00},
-    {2, 11, 12, 0, 0, 0, "317 Duke Ave.    ", "C4 ", 3, 4, 7.00},
-    {3, 11, 15, 0, 0, 0, "1720 Bury Rt.    ", "D6 ", 4, 6, 10.00},
-	{4, 11, 21, 0, 0, 0, "50 Ocean Ln.     ", "E3 ", 5, 3, 8.00},
-	{5, 11, 23, 0, 0, 0, "2613 Pearl Rd.   ", "H2 ", 8, 2, 10.00},
-	{6, 11, 30, 0, 0, 0, "101 True Dr.     ", "E1 ", 5, 1, 6.00},
-	{7, 11, 35, 0, 0, 0, "61 Mill Rd.      ", "G1 ", 7, 1, 8.00},
-	{8, 11, 42, 0, 0, 0, "136 Joey St.     ", "C4 ", 3, 4, 7.00},
-	{9, 11, 57, 0, 0, 0, "buffer   ", "00 ", 0, 0, 0.00}
+    {0, 11,  5, 0, 0, 0, 0, "null     ", "00 ", 0, 0, 0.00},
+    {1, 11,  7, 0, 0, 0, 0, "422 Cliff St.    ", "G1 ", 7, 1, 8.00},
+    {2, 11, 12, 0, 0, 0, 0, "317 Duke Ave.    ", "C4 ", 3, 4, 7.00},
+    {3, 11, 15, 0, 0, 0, 0, "1720 Bury Rt.    ", "D6 ", 4, 6, 10.00},
+	{4, 11, 21, 0, 0, 0, 0, "50 Ocean Ln.     ", "E3 ", 5, 3, 8.00},
+	{5, 11, 23, 0, 0, 0, 0, "2613 Pearl Rd.   ", "H2 ", 8, 2, 10.00},
+	{6, 11, 30, 0, 0, 0, 0, "101 True Dr.     ", "E1 ", 5, 1, 6.00},
+	{7, 11, 35, 0, 0, 0, 0, "61 Mill Rd.      ", "G1 ", 7, 1, 8.00},
+	{8, 11, 42, 0, 0, 0, 0, "136 Joey St.     ", "C4 ", 3, 4, 7.00},
+	{9, 11, 57, 0, 0, 0, 0, "buffer   ", "00 ", 0, 0, 0.00}
 };
 int totalNumOrders = (sizeof(order) / sizeof(*order))-1; // variable assigned the size of the array minus null
 
@@ -120,6 +125,16 @@ void flagDRIVER() {
 	else driver[2].timeIn =0;
 	if (driver[3].inStore==1) driver[3].timeIn++;
 	else driver[3].timeIn =0;
+
+	int p = 1;
+	for (int i = 1; i < totalNumDrivers; i++){
+		if (driver[i].inStore == 0){
+			p++;
+			if (p == totalNumDrivers){
+				parlor.driverUp = 0;
+			}
+		}
+	}	
 }
 
 // display drivers in available in store
@@ -187,7 +202,10 @@ void flagORDER() {
 	for(int i = 1; i < totalNumOrders; i++){
 		if (hr == order[i].timeHour && m == order[i].timeMinute){
 			order[i].orderInstore = 1;
+			
 		}
+		if (order[i].orderInstore)
+			order[i].orderTime++;
 	}
 }
 
@@ -195,10 +213,15 @@ void flagORDER() {
 void displayORDER() { 
 	cout << "\n\n--------------- Orders in Store --------------\n" << " Order#  Map  Address             Elapsed Time\n";
 	for(int n = 1; n < totalNumOrders; n++){
-		if (order[n].orderInstore == 1) order[n].inStoreTime++,
-			cout << "\n   " << order[n].orderNum << "     " << order[n].gridMap << "  " << order[n].address << "          " << order[n].inStoreTime;
-		if (order[n].inStoreTime > 7 && order[n].orderInstore == 1) 
-			parlor.orderUp = 1, cout << " !";
+		if (order[n].orderInstore == 1) 
+			cout << "\n   " << order[n].orderNum << "     " << order[n].gridMap << "  " << order[n].address << "          " << order[n].orderTime;
+		if (order[n].orderTime == 7 && order[n].orderInstore == 1) 
+			parlor.orderUp = 1;
+		if (order[n].orderTime >= 7 && order[n].orderInstore == 1) 
+			cout << " !";
+		if (order[n].orderTime > 21 && order[n].orderInstore == 1) 
+			cout << " ! !";
+
 	}
 }
 
@@ -210,11 +233,12 @@ void driverSORT() {
 	driver[3] = driverTemp[1];
 }
 
+
 // when an order and a driver are ready prompts user to dispatch; "0" skips by 1 minutes; needs consolidating and split into better organized functions 
 void driverOUT() {
 	cout << "\n\n----------------------------------------------\n";
 	cout << " > ";
-	if (parlor.driverUp == 1 && parlor.orderUp == 1){
+	if (parlor.driverUp == 1 && parlor.orderUp == 1 ){
 		if (driver[1].driver == "null           ")
 			driverSORT();
 		cout << "How many orders to dispatch? ", cin >> c;
@@ -223,7 +247,7 @@ void driverOUT() {
   		for(c = 0; c < g ; c++) {
       		cin >> input[c];
 			order[input[c]].orderInstore = 0;
-			driver[1].timeLimit += (order[input[c]].gridA * order[input[c]].gridB);
+			driver[1].timeLimit += ((order[input[c]].gridA * order[input[c]].gridB)+5);
 			driver[1].bank += order[input[c]].tip; // create formula for tip;  		 
 		}
 	}
@@ -236,8 +260,10 @@ void driverOUT() {
 		driverSORT();
 		g = 0;
 	}
-	if (c == 0)
+	if (c == 0){
+		parlor.orderUp = 0;
 		t = .1;
+	}
 }
 
 // checks if a driver is back in store based off calculated timeOut variable; then various flags for that driver
@@ -246,7 +272,7 @@ void driverIN(){
 		if (driver[i].onDrive == 0){
 			driver[i].timeOut++;
 			if (driver[i].timeOut == driver[i].timeLimit){
-				tipMod = ((driver[i].bank) - (((driver[i].timeOut)/100)*100)+3); //fuck
+				tipMod = ((driver[i].bank) - (((driver[i].timeOut)/100)*3)+3);
 				parlor.driverUp = 1;
 				driver[i].inStore = 1;
 				driver[i].onDrive = 0;
@@ -260,10 +286,26 @@ void driverIN(){
 	}
 }
 
+void endGAME(){
+	system("clear");
+	cout << "$" << tipAmount;
+	getchar();
+	getchar();
+
+}
+
+void lateSTRIKES(){
+
+	
+
+}
+
 // main game enclosed in a clock counter
 int main() {
 	for (hr = 11; hr < 20; hr++){
 		for (m = 0; m < 60; m++) {
+
+			driverIN();
 			flagSTORE();
 			flagORDER();
 			flagDRIVER();
@@ -275,11 +317,23 @@ int main() {
 			displayDRIVER();
 			displayDRIVEROUT();
 			displayORDER();
-			driverIN();
 			driverOUT();
 			sleep(t);
 			system("clear");
+
+	for(int i = 1; i < totalNumOrders; i++){
+		if(order[i].orderTime == 30){
+			lateStrikes++;
+			if (lateStrikes == 3){
+				system("clear");
+				cout << "$" << tipAmount;
+				getchar();
+				getchar();
+				getchar();
+				return 0;
+			}
 		}
 	}
-    return 0;
+		}
+	}
 }
